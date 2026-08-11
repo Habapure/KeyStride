@@ -11,6 +11,7 @@ set "PY="
 if exist "D:\python\python.exe" set "PY=D:\python\python.exe"
 if not defined PY if exist "E:\python\python.exe" set "PY=E:\python\python.exe"
 if not defined PY if exist "%LocalAppData%\Programs\Python\Python314\python.exe" set "PY=%LocalAppData%\Programs\Python\Python314\python.exe"
+if not defined PY if exist "%LocalAppData%\Programs\Python\Python313\python.exe" set "PY=%LocalAppData%\Programs\Python\Python313\python.exe"
 if not defined PY if exist "%LocalAppData%\Programs\Python\Python312\python.exe" set "PY=%LocalAppData%\Programs\Python\Python312\python.exe"
 if not defined PY if exist "%LocalAppData%\Programs\Python\Python311\python.exe" set "PY=%LocalAppData%\Programs\Python\Python311\python.exe"
 
@@ -39,7 +40,6 @@ if errorlevel 1 (
 :: 清理旧构建
 if exist "dist\KeyStride.exe" del "dist\KeyStride.exe"
 if exist "build" rmdir /s /q "build" 2>nul
-if exist "KeyStride.spec" del "KeyStride.spec"
 
 echo.
 echo 正在打包，请稍候...
@@ -51,9 +51,6 @@ echo.
     --name "KeyStride" ^
     --icon "icons\app.ico" ^
     --add-data "icons;icons" ^
-    --hidden-import "PySide6.QtCore" ^
-    --hidden-import "PySide6.QtWidgets" ^
-    --hidden-import "PySide6.QtGui" ^
     --clean ^
     --noconsole ^
     main.py

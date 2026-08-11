@@ -8,6 +8,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from .keyboard import normalize_text
+from logger import log_exception
 
 if TYPE_CHECKING:
     from modes.base import TypingMode
@@ -82,6 +83,7 @@ class TypingEngine:
     ) -> None:
         completed = False
         was_resume = False
+        start = 0
         try:
             text = normalize_text(text)
             if not text:
@@ -117,7 +119,14 @@ class TypingEngine:
             self._resume_text = text
             if completed:
                 self.clear_resume()
+        except Exception:
+            log_exception("typing engine failed")
+            self._resume_text = text
+            self._resume_index = start
         finally:
             self._busy.clear()
             if on_done:
-                on_done(completed, was_resume)
+                try:
+                    on_done(completed, was_resume)
+                except Exception:
+                    log_exception("typing completion callback failed")

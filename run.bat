@@ -6,6 +6,7 @@ set "PYW="
 if exist "D:\python\python.exe" set "PY=D:\python\python.exe" & set "PYW=D:\python\pythonw.exe"
 if not defined PY if exist "E:\python\python.exe" set "PY=E:\python\python.exe" & set "PYW=E:\python\pythonw.exe"
 if not defined PY if exist "%LocalAppData%\Programs\Python\Python314\python.exe" set "PY=%LocalAppData%\Programs\Python\Python314\python.exe" & set "PYW=%LocalAppData%\Programs\Python\Python314\pythonw.exe"
+if not defined PY if exist "%LocalAppData%\Programs\Python\Python313\python.exe" set "PY=%LocalAppData%\Programs\Python\Python313\python.exe" & set "PYW=%LocalAppData%\Programs\Python\Python313\pythonw.exe"
 if not defined PY if exist "%LocalAppData%\Programs\Python\Python312\python.exe" set "PY=%LocalAppData%\Programs\Python\Python312\python.exe" & set "PYW=%LocalAppData%\Programs\Python\Python312\pythonw.exe"
 if not defined PY if exist "%LocalAppData%\Programs\Python\Python311\python.exe" set "PY=%LocalAppData%\Programs\Python\Python311\python.exe" & set "PYW=%LocalAppData%\Programs\Python\Python311\pythonw.exe"
 

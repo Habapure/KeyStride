@@ -100,11 +100,16 @@ def char_to_events(char: str) -> list[INPUT]:
 
 
 def send_inputs(inputs: list[INPUT]) -> int:
-    """发送一组 INPUT，返回实际发送数量。"""
+    """Send one INPUT batch or raise when Windows accepts only part of it."""
     if not inputs:
         return 0
     arr = (INPUT * len(inputs))(*inputs)
     sent = user32.SendInput(len(inputs), arr, ctypes.sizeof(INPUT))
+    if sent != len(inputs):
+        error = ctypes.get_last_error()
+        if error:
+            raise ctypes.WinError(error)
+        raise OSError(f"SendInput sent {sent} of {len(inputs)} keyboard events")
     return int(sent)
 
 

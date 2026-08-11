@@ -31,7 +31,7 @@ def _show_error(message: str) -> None:
 
 
 try:
-    from config import AppConfig
+    from config import AppConfig, normalize_hotkey
     from core.clipboard import get_clipboard_text
     from core.engine import TypingEngine
     from hotkey import HotkeyListener
@@ -71,6 +71,7 @@ class App:
         self.hotkey = HotkeyListener(
             on_trigger=self.on_hotkey,
             on_cancel=self.on_cancel,
+            hotkey=self.config.hotkey,
         )
 
     def set_status(self, text: str) -> None:
@@ -179,6 +180,23 @@ class App:
         if self.tray:
             self.tray.refresh()
 
+    def on_hotkey_change(self, hotkey: str) -> None:
+        self.config.hotkey = normalize_hotkey(hotkey)
+        self.config.save()
+        self.hotkey.stop()
+        self.hotkey = HotkeyListener(
+            on_trigger=self.on_hotkey,
+            on_cancel=self.on_cancel,
+            hotkey=self.config.hotkey,
+        )
+        if not self.hotkey.start():
+            self.set_status("热键启动失败，请检查冲突")
+        else:
+            self.set_status(f"热键已更改为 {self.config.hotkey.upper()}")
+        if self.tray:
+            self.tray.refresh()
+
+
     def on_quit(self) -> None:
         log("app: on_quit")
         self.engine.stop()
@@ -201,15 +219,12 @@ class App:
             on_quit=self.on_quit,
             status_text=self.get_status,
         )
-        try:
-            self.hotkey.start()
-            log("app: hotkey started")
-        except Exception:
-            log_exception("hotkey start failed")
-            _show_error("全局热键启动失败（可能被杀软拦截）：\n\n" + traceback.format_exc())
+        if not self.hotkey.start():
+            _show_error("全局热键启动失败（可能被杀软拦截）。详情请查看 runtime.log。")
             return 1
 
-        self.set_status("就绪 Ctrl+Shift+V")
+        log("app: hotkey started")
+        self.set_status(f"就绪 {self.config.hotkey.upper()}")
         self.beep(True)
         self.tray.run()
         log("app: exit normally")

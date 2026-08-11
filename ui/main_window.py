@@ -176,7 +176,8 @@ class MainWindow(QMainWindow):
 
     def _build_ui(self) -> None:
         self.setWindowTitle("键步如飞 · KeyStride")
-        self.setFixedSize(480, 640)
+        self.setMinimumSize(480, 640)
+        self.resize(480, 640)
         self.setObjectName("mainWindow")
 
         central = QWidget()

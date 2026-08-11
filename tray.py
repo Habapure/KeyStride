@@ -151,13 +151,13 @@ class TrayApp:
                     ),
                 ),
             ),
-            pystray.MenuItem("热键: Ctrl+Shift+V", None, enabled=False),
+            pystray.MenuItem(f"热键: {self.config.hotkey.upper()}", None, enabled=False),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("退出", quit_app),
         )
 
     def refresh(self) -> None:
-        """仅在托盘线程调用；其他线程请勿调用。"""
+        """Refresh title and menu after a tray-menu configuration change."""
         if self.icon is None:
             return
         try:
@@ -166,6 +166,7 @@ class TrayApp:
             self.icon.update_menu()
         except Exception:
             log_exception("tray.refresh failed")
+
 
     def run(self) -> None:
         log("tray: creating icon")

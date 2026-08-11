@@ -20,6 +20,10 @@ def main() -> int:
         "--windowed",
         "--name",
         "KeyStride",
+        "--icon",
+        str(ROOT / "icons" / "app.ico"),
+        "--add-data",
+        f"{ROOT / 'icons'};icons",
         str(ROOT / "main.py"),
     ]
     print(" ".join(cmd))
