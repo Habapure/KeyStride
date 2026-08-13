@@ -145,8 +145,10 @@ class MainWindow(QMainWindow):
         on_mode_change: Callable[[str], None] | None = None,
         on_delay_change: Callable[[float], None] | None = None,
         on_sound_toggle: Callable[[bool], None] | None = None,
+        on_hotkey_change: Callable[[str], None] | None = None,
         on_quit: Callable[[], None] | None = None,
         status_text: Callable[[], str] | None = None,
+        status_setter: Callable[[str], None] | None = None,
     ):
         super().__init__()
         self.config = config
@@ -154,8 +156,10 @@ class MainWindow(QMainWindow):
         self._on_mode_change = on_mode_change
         self._on_delay_change = on_delay_change
         self._on_sound_toggle = on_sound_toggle
+        self._on_hotkey_change = on_hotkey_change
         self._on_quit = on_quit
         self._status_text = status_text
+        self._status_setter = status_setter
 
         self._card_widgets: dict[str, ModeCard] = {}
         self._tray: QSystemTrayIcon | None = None
@@ -464,6 +468,18 @@ class MainWindow(QMainWindow):
 
     def _on_minimize_toggled(self, enabled: bool) -> None:
         pass  # 由 closeEvent 处理
+
+    def set_status(self, text: str) -> None:
+        """Push a status string from any thread (typing engine callback)."""
+        if not QApplication.instance():
+            return
+        if self._status_setter:
+            self._status_setter(text)
+
+    def refresh_hotkey_label(self) -> None:
+        if hasattr(self, "_hotkey_hint"):
+            hk = self.config.hotkey.upper()
+            self._hotkey_hint.setText("hotkey: " + hk + "  |  ESC to abort")
 
     def _on_quit_clicked(self) -> None:
         if self._tray:

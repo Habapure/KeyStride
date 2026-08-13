@@ -65,7 +65,7 @@ class App:
     def __init__(self) -> None:
         self.config = AppConfig.load()
         self.engine = TypingEngine()
-        self.tray: TrayApp | None = None
+        self.window: MainWindow | None = None
         self._status = ""
         self._status_lock = threading.Lock()
         self.hotkey = HotkeyListener(
@@ -156,29 +156,25 @@ class App:
         self.config.enabled = enabled
         self.config.save()
         self.set_status("已启用" if enabled else "已禁用")
-        if self.tray:
-            self.tray.refresh()
+        self._refresh_ui()
 
     def on_mode_change(self, mode: str) -> None:
         self.config.mode = mode
         self.config.save()
         self.set_status(f"模式: {MODE_LABELS.get(mode, mode)}")
-        if self.tray:
-            self.tray.refresh()
+        self._refresh_ui()
 
     def on_delay_change(self, seconds: float) -> None:
         self.config.delay_seconds = seconds
         self.config.save()
         self.set_status("延迟: 立即" if seconds <= 0 else f"延迟: {seconds:g}s")
-        if self.tray:
-            self.tray.refresh()
+        self._refresh_ui()
 
     def on_sound_toggle(self, enabled: bool) -> None:
         self.config.sound_enabled = enabled
         self.config.save()
         self.set_status("提示音: 开" if enabled else "提示音: 关")
-        if self.tray:
-            self.tray.refresh()
+        self._refresh_ui()
 
     def on_hotkey_change(self, hotkey: str) -> None:
         self.config.hotkey = normalize_hotkey(hotkey)
@@ -193,16 +189,14 @@ class App:
             self.set_status("热键启动失败，请检查冲突")
         else:
             self.set_status(f"热键已更改为 {self.config.hotkey.upper()}")
-        if self.tray:
-            self.tray.refresh()
+        self._refresh_ui()
 
 
     def on_quit(self) -> None:
         log("app: on_quit")
         self.engine.stop()
         self.hotkey.stop()
-        if self.tray:
-            self.tray.stop()
+        QApplication.quit()
 
     def run(self) -> int:
         if sys.platform != "win32":
