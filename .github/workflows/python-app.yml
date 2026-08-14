@@ -38,4 +38,5 @@ jobs:
 
     - name: Test with pytest
       run: |
+        $env:PYTHONPATH = "$PWD"
         pytest
