@@ -80,3 +80,4 @@ class AppConfig:
             cfg.sound_enabled = cls.sound_enabled
         cfg.hotkey = normalize_hotkey(cfg.hotkey, cls.hotkey)
         return cfg
+# GitHub Actions test
