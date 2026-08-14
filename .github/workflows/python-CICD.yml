@@ -1,16 +1,15 @@
 name: KeyStride CI/CD
 
 on:
-  # 推送到 main 时运行
-  # 推送 v1.0.0 这类 Tag 时也运行
   push:
-    branches: ["main"]
+    branches:
+      - "main"
     tags:
       - "v*"
 
-  # Pull Request 时运行
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"
 
 permissions:
   contents: read
@@ -18,7 +17,7 @@ permissions:
 jobs:
 
   # ============================================================
-  # 1. 构建、代码检查、单元测试、EXE 打包
+  # 1. 构建、代码检查、测试、EXE 打包
   # ============================================================
   build:
     name: Build and Test
@@ -26,17 +25,17 @@ jobs:
 
     steps:
 
-      # 获取源代码
+      # 获取代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Python 环境
+      # 设置 Python
       - name: Set up Python 3.10
         uses: actions/setup-python@v6
         with:
           python-version: "3.10"
 
-      # 安装依赖
+      # 安装项目依赖
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -49,18 +48,18 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # pytest 测试
+      # pytest
       - name: Test with pytest
         run: |
           $env:PYTHONPATH = "$PWD"
           pytest
 
-      # PyInstaller 打包 EXE
+      # PyInstaller
       - name: Build EXE
         run: |
           pyinstaller --onefile --name KeyStride main.py
 
-      # 上传 EXE
+      # 上传 EXE Artifact
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
@@ -69,63 +68,72 @@ jobs:
 
 
   # ============================================================
-  # 2. Python 安全检测
+  # 2. 安全检测
   # ============================================================
   security:
     name: Security Scan
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.10"
+      # 获取代码
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install security tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install bandit pip-audit
+      # 设置 Python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
 
-    - name: Run Bandit
-      run: |
-        bandit -r . -x tests --severity-level medium
+      # 安装项目依赖 + 安全工具
+      - name: Install security tools and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pip-audit
+          pip install -r requirements.txt
 
-    - name: Run pip-audit
-      run: |
-        pip-audit -r requirements.txt
+      # Bandit
+      # Medium / High 才阻止 CI
+      # Low 级别只作为提示，不阻止构建
+      - name: Run Bandit
+        run: |
+          bandit -r . -x tests --severity-level medium
+
+      # pip-audit
+      # 检查 requirements.txt 中第三方依赖的已知漏洞
+      - name: Run pip-audit
+        run: |
+          pip-audit -r requirements.txt
 
 
   # ============================================================
   # 3. 自动发布 GitHub Release
   # ============================================================
   release:
-    name: Create Release
+    name: Create GitHub Release
     runs-on: ubuntu-latest
 
     needs:
       - build
       - security
 
-    # 只有 v* Tag 才发布
+    # 只有 v* Tag 才执行 Release
     if: startsWith(github.ref, 'refs/tags/v')
 
-    # Release 需要写权限
     permissions:
       contents: write
 
     steps:
 
-      # 下载 build Job 的 EXE
+      # 下载 build Job 生成的 EXE
       - name: Download EXE artifact
         uses: actions/download-artifact@v4
         with:
           name: KeyStride-windows
           path: release
 
-      # 查看文件
+      # 查看生成的文件
       - name: List release files
         run: |
           ls -R release
