@@ -149,6 +149,7 @@ class MainWindow(QMainWindow):
         on_quit: Callable[[], None] | None = None,
         status_text: Callable[[], str] | None = None,
         status_setter: Callable[[str], None] | None = None,
+        on_conflict_check: Callable[[], list] | None = None,
     ):
         super().__init__()
         self.config = config
@@ -160,14 +161,22 @@ class MainWindow(QMainWindow):
         self._on_quit = on_quit
         self._status_text = status_text
         self._status_setter = status_setter
+        self._on_conflict_check = on_conflict_check
+        self._conflicts: list = []
 
         self._card_widgets: dict[str, ModeCard] = {}
         self._tray: QSystemTrayIcon | None = None
+        self._resizer: WindowResizer | None = None
 
         self._build_ui()
         self._create_tray()
         self._connect_signals()
         self._sync_from_config()
+        
+        # 启用窗口可调整大小
+        self.setFixedSize(560, 720)
+        self.setMinimumSize(480, 640)
+        self.setSizeIncrement(10, 10)
 
         # 定时刷新状态
         self._status_timer = QTimer(self)

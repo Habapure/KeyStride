@@ -37,7 +37,8 @@ try:
     from hotkey import HotkeyListener
     from logger import log, log_exception
     from modes import MODE_LABELS, get_mode
-    from tray import TrayApp
+    from PySide6.QtWidgets import QApplication
+    from ui.main_window import MainWindow
 except Exception:
     _show_error("导入依赖失败：\n\n" + traceback.format_exc())
     raise SystemExit(1) from None
@@ -200,29 +201,38 @@ class App:
 
     def run(self) -> int:
         if sys.platform != "win32":
-            print("仅支持 Windows")
+            print("??? Windows")
             return 1
 
         log("app: start")
-        self.tray = TrayApp(
+        qt_app = QApplication.instance() or QApplication(sys.argv)
+        qt_app.setQuitOnLastWindowClosed(False)
+
+        self.window = MainWindow(
             self.config,
             on_toggle_enabled=self.on_toggle_enabled,
             on_mode_change=self.on_mode_change,
             on_delay_change=self.on_delay_change,
             on_sound_toggle=self.on_sound_toggle,
+            on_hotkey_change=self.on_hotkey_change,
             on_quit=self.on_quit,
             status_text=self.get_status,
         )
+        self.window.show()
+        self.window.raise_()
+        self.window.activateWindow()
+
         if not self.hotkey.start():
-            _show_error("全局热键启动失败（可能被杀软拦截）。详情请查看 runtime.log。")
+            _show_error("??????????????????????? runtime.log?")
             return 1
 
         log("app: hotkey started")
-        self.set_status(f"就绪 {self.config.hotkey.upper()}")
+        self.set_status("?? " + self.config.hotkey.upper())
         self.beep(True)
-        self.tray.run()
-        log("app: exit normally")
-        return 0
+        log("app: entering Qt event loop")
+        rc = qt_app.exec()
+        log("app: Qt event loop exited with " + str(rc))
+        return int(rc) if rc else 0
 
 
 def main() -> int:
